@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#efeee7">
+  <meta name="description" content="Amp — จักรวาลธุรกิจที่ตั้งใจออกแบบให้ขัดใจ แต่เล่นจนจบได้จริง">
+  <title>Amp — กรมบริการขัดใจ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./experiences.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="site-shell">
+    <header class="topbar">
+      <button class="brand" id="brand" type="button" aria-label="Amp กลับหน้ารวม"><span class="brand-mark">A<span>✳</span></span><span>AMP<span class="brand-dot">.</span></span></button>
+      <div class="topbar-note"><span class="live-dot"></span> ระบบทำงานตามอารมณ์ <span class="topbar-clock" id="clock">00:00:00</span></div>
+      <button class="header-action" id="sound-toggle" type="button" aria-pressed="false">♫ <span>เสียง: ปิด</span></button>
+    </header>
+
+    <main id="app" aria-live="polite"></main>
+
+    <footer class="footer">
+      <span>© AMP UNNECESSARY INDUSTRIES</span>
+      <span>ออกแบบผิดหลักอย่างตั้งใจ · เล่นได้จริงอย่างน่าเสียดาย</span>
+      <button id="reset-progress" type="button">ลืมทุกอย่างที่ทำมา ↗</button>
+    </footer>
+  </div>
+  <div class="assistant-dock">
+    <section class="assistant-panel" id="assistant-panel" aria-label="ผู้ช่วยที่ไม่ค่อยช่วย" hidden>
+      <div class="assistant-head"><strong>AMP AI <small>beta forever</small></strong><button id="assistant-close" aria-label="ปิดผู้ช่วย">×</button></div>
+      <div class="assistant-messages" id="assistant-messages" aria-live="polite"><p class="assistant-bubble">สวัสดี ฉันได้รับการฝึกมาอย่างหนักเพื่อให้คำตอบที่ไม่ค่อยตรงคำถาม</p></div>
+      <div class="assistant-quick"><button id="assistant-hint">ขอคำใบ้</button><button id="assistant-escape">พาหนี</button></div>
+      <form id="assistant-form"><input id="assistant-input" aria-label="ถาม Amp AI" placeholder="ถามอะไรก็ได้ (เราตอบอีกอย่าง)"><button type="submit" aria-label="ส่งคำถาม">↗</button></form>
+    </section>
+    <button class="assistant-toggle" id="assistant-toggle" aria-expanded="false" aria-controls="assistant-panel"><span class="assistant-star">✳</span><span>AI ที่ไม่ได้ช่วย</span></button>
+  </div>
+  <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
