@@ -6,10 +6,11 @@ const toastStack = document.querySelector('#toast-stack');
 const soundButton = document.querySelector('#sound-toggle');
 const totalStages = departments.length * 4;
 let progress = readProgress();
+let chaos = readChaos();
 let soundOn = false;
 let audioContext;
 let attempts = 0;
-let hintVisible = false;
+let hintLevel = 0;
 let activeCleanup = () => {};
 let currentRoute = '';
 
@@ -21,6 +22,15 @@ function readProgress() {
 }
 function saveProgress() {
   try { localStorage.setItem('amp-progress-v1', JSON.stringify(progress)); } catch { /* playable without storage */ }
+}
+function readChaos() {
+  try {
+    const data = JSON.parse(localStorage.getItem('amp-chaos-v1') || '{}');
+    return {fails: 0, hints: 0, escapes: 0, complaints: 0, ...data};
+  } catch { return {fails: 0, hints: 0, escapes: 0, complaints: 0}; }
+}
+function saveChaos() {
+  try { localStorage.setItem('amp-chaos-v1', JSON.stringify(chaos)); } catch { /* still playable */ }
 }
 function completeCount() { return departments.reduce((n, d) => n + Math.min(4, Math.max(0, Number(progress[d.id]) || 0)), 0); }
 function escapeHTML(value) { return String(value).replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x])); }
@@ -45,14 +55,14 @@ function toast(message) {
   while (toastStack.children.length > 3) toastStack.firstElementChild.remove();
 }
 function fail(message = 'ระบบเห็นแล้วครับ แต่ยังไม่ประทับใจ') {
-  attempts++; sound(190, .12, 'sawtooth');
+  attempts++; chaos.fails++; saveChaos(); sound(190, .12, 'sawtooth');
   const box = document.querySelector('#feedback');
   if (box) box.textContent = message;
   if (attempts === 3 || attempts === 7 || (attempts > 7 && attempts % 6 === 0)) {
     const dept = departments.find(d => currentRoute.startsWith(`${d.id}/`));
     toast(attempts === 3 && dept ? dept.taunt : taunts[(Math.floor(attempts / 3) + currentRoute.length) % taunts.length]);
   }
-  if (attempts >= 4 && !hintVisible) {
+  if (attempts >= 4 && hintLevel === 0) {
     const hintButton = document.querySelector('#hint-button');
     if (hintButton) hintButton.textContent = 'โอเค เฉลยก็ได้ ↗';
   }
@@ -62,7 +72,7 @@ function navigate(hash) {
 }
 function render() {
   activeCleanup(); activeCleanup = () => {};
-  attempts = 0; hintVisible = false;
+  attempts = 0; hintLevel = 0;
   const path = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   const dept = departments.find(d => d.id === path[0]);
   const stageNumber = Number(path[1] || 1);
@@ -94,6 +104,7 @@ function renderHub() {
       </div>
     </section>
     <div class="marquee-wrap" aria-hidden="true"><div class="marquee">${Array(4).fill('<span>WELCOME TO THE WRONG SIDE OF THE WEB</span><span>PLEASE BE PATIENT WHILE WE TEST YOURS</span>').join('')}</div></div>
+    <section class="chaos-report" aria-label="แฟ้มความอดทน"><div><span class="eyebrow">PLAYER DOSSIER / ไม่ได้ขอแต่เราทำให้</span><strong>ความคืบหน้า ${done}/${totalStages} · ตอบพลาด ${chaos.fails} ครั้ง</strong><small>ข้อมูลนี้อยู่ในเบราว์เซอร์ของคุณเท่านั้น</small></div><button id="open-dossier" type="button">เปิดแฟ้มลับของฉัน ↗</button></section>
     <section id="departments" aria-labelledby="service-heading">
       <div class="section-head"><div><div class="eyebrow">OUR QUESTIONABLE SERVICES / 01—08</div><h2 id="service-heading">เลือกบริการ<span>ผิด</span></h2></div><div class="section-aside">เปลี่ยนหมวดได้ทุกเมื่อ ด่านหลัง ๆ ตั้งใจทำให้คุณอยากทำแบบนั้น<br><br><strong>${done} / ${totalStages}</strong> ด่านที่คุณอดทนผ่านมาแล้ว</div></div>
       <div class="department-grid">${departments.map((d, i) => `
@@ -114,13 +125,14 @@ function renderHub() {
     document.querySelector('#departments').scrollIntoView({behavior:'smooth'});
     toast('คุณกด “อย่าเพิ่งเริ่ม” เราจึงพามาใกล้จุดเริ่มต้น');
   });
+  document.querySelector('#open-dossier').addEventListener('click', showDossier);
   document.querySelectorAll('[data-dept]').forEach(card => {
     const open = () => { sound(580); navigate(`#/${card.dataset.dept}/${Math.min(4, (Number(progress[card.dataset.dept]) || 0) + 1)}`); };
     card.addEventListener('click', open);
     card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
   });
 }
-function stageHint(dept, index) { return dept.hints[index]; }
+function stageHint(dept, index, level = 1) { return level === 1 ? dept.clues[index] : dept.hints[index]; }
 function renderStage(dept, index, won = false) {
   const allowed = Math.min(3, Number(progress[dept.id]) || 0);
   if (index > allowed) { navigate(`#/${dept.id}/${allowed + 1}`); return; }
@@ -144,11 +156,14 @@ function renderStage(dept, index, won = false) {
   document.querySelectorAll('[data-stage]').forEach(button => button.addEventListener('click', () => navigate(`#/${dept.id}/${button.dataset.stage}`)));
   if (won) bindWin(dept, index);
   else {
-    document.querySelector('#exit-stage').addEventListener('click', () => { toast('หนีสำเร็จ...ชั่วคราว'); navigate('#/'); });
+    document.querySelector('#exit-stage').addEventListener('click', () => { chaos.escapes++; saveChaos(); toast('หนีสำเร็จ...ชั่วคราว'); navigate('#/'); });
     document.querySelector('#hint-button').addEventListener('click', () => {
-      hintVisible = !hintVisible;
+      hintLevel = (hintLevel + 1) % 3;
       const box = document.querySelector('#hint');
-      box.textContent = stageHint(dept, index); box.hidden = !hintVisible;
+      box.textContent = hintLevel ? stageHint(dept, index, hintLevel) : '';
+      box.hidden = hintLevel === 0;
+      document.querySelector('#hint-button').textContent = ['ขอความช่วยเหลือ (อาจช่วย)', 'ขอเฉลยตรง ๆ ↗', 'ซ่อนคำตอบ (เก็บศักดิ์ศรี)'][hintLevel];
+      if (hintLevel) { chaos.hints++; saveChaos(); }
       sound(310, .1, 'sine');
     });
     mountExperience(dept.id, index, {area: document.querySelector('#game-area'), done: () => finish(dept, index), fail, sound, toast, cleanup: fn => { activeCleanup = fn; }});
@@ -182,6 +197,30 @@ function celebrate() {
     if (t-start < 2600) requestAnimationFrame(frame); else ctx.clearRect(0,0,innerWidth,innerHeight);
   }; requestAnimationFrame(frame);
 }
+function showDossier() {
+  const dialog = document.createElement('div');
+  dialog.className = 'reset-dialog dossier-dialog';
+  const stamps = [
+    [completeCount() >= 8, 'อยู่ต่อทั้งที่กลับได้'],
+    [chaos.fails >= 10, 'ตอบผิดอย่างสม่ำเสมอ'],
+    [chaos.hints >= 5, 'ผู้ใช้สิทธิ์ถามอย่างคุ้มค่า'],
+    [chaos.escapes >= 3, 'นักท่องเที่ยวระหว่างหมวด']
+  ];
+  dialog.innerHTML = `<div class="reset-card dossier-card" role="dialog" aria-modal="true" aria-labelledby="dossier-title"><span class="eyebrow">AMP INTERNAL DOCUMENT / EYES ONLY? NO</span><h2 id="dossier-title">แฟ้มความอดทนของคุณ</h2><div class="dossier-grid"><span>ผ่านด่าน<strong>${completeCount()} / ${totalStages}</strong></span><span>ตอบพลาด<strong>${chaos.fails}</strong></span><span>ขอใบ้<strong>${chaos.hints}</strong></span><span>หนีไปหมวดอื่น<strong>${chaos.escapes}</strong></span></div><div class="dossier-stamps">${stamps.map(([earned, name]) => `<span class="${earned ? 'earned' : ''}">${earned ? '✓' : '⌁'} ${name}</span>`).join('')}</div><p id="complaint-result">คำร้องเรียนที่ยื่นแล้ว: ${chaos.complaints} · สถานะ: อยู่ระหว่างการอยู่ระหว่าง</p><div class="reset-actions"><button id="file-complaint" type="button">ร้องเรียนระบบ ↗</button><button id="close-dossier" type="button">ปิดแฟ้ม (ยังจำได้)</button></div></div>`;
+  document.body.append(dialog);
+  const close = () => { dialog.remove(); window.removeEventListener('keydown', onKey); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  window.addEventListener('keydown', onKey);
+  dialog.querySelector('#close-dossier').addEventListener('click', close);
+  dialog.addEventListener('click', e => { if (e.target === dialog) close(); });
+  dialog.querySelector('#file-complaint').addEventListener('click', () => {
+    chaos.complaints++; saveChaos();
+    const replies = ['รับเรื่องแล้ว ระบบส่งต่อให้ระบบเดิม', 'เลขที่คำร้อง: กำลังนับย้อนหลัง', 'ฝ่ายบริการเห็นด้วยว่าควรมีฝ่ายบริการ', 'คำร้องสำเร็จ! ไม่มีใครได้รับแจ้ง'];
+    dialog.querySelector('#complaint-result').textContent = `คำร้อง #${chaos.complaints}: ${replies[(chaos.complaints - 1) % replies.length]}`;
+    sound(260, .1, 'triangle');
+  });
+  dialog.querySelector('#file-complaint').focus();
+}
 document.querySelector('#brand').addEventListener('click', () => navigate('#/'));
 const assistantPanel = document.querySelector('#assistant-panel');
 const assistantToggle = document.querySelector('#assistant-toggle');
@@ -200,7 +239,7 @@ document.querySelector('#assistant-hint').addEventListener('click', () => {
   if (currentRoute === 'hub') assistantMessage('คำใบ้หน้ารวม: เลือกหมวดไหนก็ได้ เพราะทุกหมวดคิดว่าตัวเองสำคัญที่สุด');
   else {
     const [id, n] = currentRoute.split('/'); const dept = departments.find(d => d.id === id);
-    assistantMessage(stageHint(dept, Number(n)-1));
+    assistantMessage(stageHint(dept, Number(n)-1, 1));
   }
 });
 document.querySelector('#assistant-escape').addEventListener('click', () => {
@@ -225,7 +264,7 @@ document.querySelector('#reset-progress').addEventListener('click', () => {
   dialog.innerHTML = '<div class="reset-card" role="dialog" aria-modal="true" aria-labelledby="reset-title"><h2 id="reset-title">ลืมทุกอย่างจริงเหรอ?</h2><p>ความคืบหน้าทั้งหมดจะหายไป แต่ประสบการณ์จะยังหลอนอยู่ในความทรงจำ</p><div class="reset-actions"><button id="reset-cancel">ไม่ลืม</button><button id="reset-confirm">ลืมจริง</button></div></div>';
   document.body.append(dialog);
   dialog.querySelector('#reset-cancel').addEventListener('click', () => dialog.remove());
-  dialog.querySelector('#reset-confirm').addEventListener('click', () => { progress = {}; saveProgress(); dialog.remove(); toast('ระบบลืมแล้ว แต่เรายังจำได้'); navigate('#/'); });
+  dialog.querySelector('#reset-confirm').addEventListener('click', () => { progress = {}; chaos = {fails: 0, hints: 0, escapes: 0, complaints: 0}; saveProgress(); saveChaos(); dialog.remove(); toast('ระบบลืมแล้ว แต่เรายังจำได้'); navigate('#/'); });
   dialog.addEventListener('click', e => { if (e.target === dialog) dialog.remove(); });
   dialog.querySelector('#reset-cancel').focus();
 });
