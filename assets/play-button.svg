@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 230" role="img" aria-labelledby="title desc">
+  <title id="title">BACK เพื่อเข้าไปเล่น Amp</title>
+  <desc id="desc">ปุ่มเข้าเล่นขนาดใหญ่สีเขียวมะนาวบนพื้นสีเข้ม พร้อมลูกศรย้อนกลับที่พาไปข้างหน้า</desc>
+  <rect width="960" height="230" rx="22" fill="#1d211d"/>
+  <rect x="3" y="3" width="954" height="224" rx="19" fill="none" stroke="#41483f" stroke-width="3"/>
+  <circle cx="34" cy="33" r="7" fill="#ff8e83"/>
+  <circle cx="57" cy="33" r="7" fill="#ffcc73"/>
+  <circle cx="80" cy="33" r="7" fill="#e9fa72"/>
+  <text x="110" y="39" fill="#e6e9d9" font-family="Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="3">AMP UNNECESSARY INDUSTRIES</text>
+  <text x="810" y="39" fill="#aeb7a5" font-family="Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="2">ENTRY 001 ↗</text>
+  <rect x="31" y="76" width="899" height="120" rx="15" fill="#ff9b9b" transform="rotate(1.2 480 136)"/>
+  <rect x="31" y="72" width="899" height="120" rx="15" fill="#e9fa72" stroke="#101710" stroke-width="3" transform="rotate(-1 480 132)"/>
+  <text x="62" y="148" fill="#162019" font-family="Arial, sans-serif" font-size="62" font-weight="900" letter-spacing="-3">← BACK</text>
+  <path d="M384 102 L408 130 L384 158" fill="none" stroke="#162019" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="452" y="143" fill="#162019" font-family="Arial, 'Noto Sans Thai', sans-serif" font-size="45" font-weight="800">เข้าไปเล่นต่อ</text>
+  <text x="456" y="169" fill="#33401e" font-family="Arial, 'Noto Sans Thai', sans-serif" font-size="16" font-weight="700">ปุ่มย้อนกลับที่จะพาคุณไปข้างหน้า · CLICK TO PLAY</text>
+  <text x="32" y="218" fill="#aeb7a5" font-family="Arial, 'Noto Sans Thai', sans-serif" font-size="14">8 แผนก / 32 ด่าน / ความอดทนไม่รวมในบริการ</text>
+  <text x="890" y="218" fill="#e9fa72" font-family="Arial, sans-serif" font-size="20" font-weight="900">↗</text>
+</svg>
