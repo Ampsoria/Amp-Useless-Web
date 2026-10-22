@@ -52,15 +52,22 @@ function shop(index, ctx) {
     area.querySelector('form').addEventListener('submit', e => { e.preventDefault(); area.querySelector('input').value.trim().toUpperCase() === 'NOPE' ? done() : fail('คูปองไม่ตรง ร้านดีใจเล็กน้อย'); });
   } else {
     let armed = false;
-    area.innerHTML = `<div class="ex-topline">CHECKOUT / กรุณาเลือกวิธีส่งความว่าง</div><div class="shop-shipping"><button data-shipping="wrong">ส่งด่วนภายใน 8–10 ปี</button><button data-shipping="right">ไปรับเองในอดีต</button><button data-shipping="wrong">ส่งทางความคิด</button></div><div class="ex-status" id="shop-shipping-status">ยังไม่ได้เลือกวิธีจัดส่ง</div><button class="ex-cta" id="shop-pay" disabled>กดค้างเพื่อจ่าย ฿0</button><div class="ex-meter"><span id="shop-pay-fill"></span></div>`;
+    const methods = [
+      {id:'slow',name:'ส่งด่วนภายใน 8–10 ปี',policy:'พัสดุต้องถึงช้ากว่าวันหมดประกัน'},
+      {id:'past',name:'ไปรับเองในอดีต',policy:'ลูกค้าต้องได้รับของก่อนวันที่สั่งซื้อ'},
+      {id:'thought',name:'ส่งทางความคิด',policy:'ห้ามให้พัสดุมีตัวตนจริง'}
+    ];
+    const chosen = methods[Math.floor(Math.random() * methods.length)];
+    area.innerHTML = `<div class="ex-topline">CHECKOUT / กรุณาเลือกวิธีส่งความว่าง</div><button class="ex-evidence" id="shop-policy">เปิดนโยบายจัดส่งฉบับวันนี้ ↗</button><div class="ex-evidence-note" id="shop-policy-note" hidden>นโยบายวันนี้: ${chosen.policy}</div><div class="shop-shipping">${shuffled(methods).map(method => `<button data-shipping="${method.id}">${method.name}</button>`).join('')}</div><div class="ex-status" id="shop-shipping-status">ยังไม่ได้เลือกวิธีจัดส่ง</div><button class="ex-cta" id="shop-pay" disabled>กดค้างเพื่อจ่าย ฿0</button><div class="ex-meter"><span id="shop-pay-fill"></span></div>`;
+    area.querySelector('#shop-policy').addEventListener('click', () => { area.querySelector('#shop-policy-note').hidden = false; ctx.sound(430); });
     area.querySelectorAll('[data-shipping]').forEach(b => b.addEventListener('click', () => {
-      if (b.dataset.shipping === 'right') {
-        if (armed) return;
+      if (armed) return;
+      if (b.dataset.shipping === chosen.id) {
         armed = true;
-        area.querySelector('#shop-shipping-status').textContent = 'วิธีจัดส่ง: เดินทางย้อนเวลาเพื่อรับเอง';
+        area.querySelector('#shop-shipping-status').textContent = `วิธีจัดส่งที่ระบบจำใจยอมรับ: ${chosen.name}`;
         const pay = area.querySelector('#shop-pay'); pay.disabled = false;
         hold(pay, area.querySelector('#shop-pay-fill'), 1700, ctx, done, 'ร้านขอให้คุณกดให้นานกว่าความคุ้มค่า');
-      } else fail('วิธีส่งนี้สมเหตุผลเกินไป ร้านไม่มีบริการ');
+      } else fail('นโยบายฉบับวันนี้ไม่ได้ขอวิธีนี้ ลองเปิดเอกสารที่ซ่อนอยู่');
     }));
   }
 }
@@ -93,12 +100,19 @@ function bank(index, ctx) {
     area.querySelector('form').addEventListener('submit', e => { e.preventDefault(); area.querySelector('input').value.trim() === secret ? done() : fail('OTP ไม่ตรง ธนาคารขอแสดงความไม่เชื่อมั่น'); });
   } else {
     let armed = false;
-    area.innerHTML = `<div class="atm"><div class="atm-screen"><small>TRANSFER / ฿0.00</small><strong>เลือกผู้รับ</strong><span id="bank-recipient">ยังไม่มีบัญชีปลายทาง</span></div><div class="bank-accounts"><button data-bank="wrong">บัญชีออมทรัพย์</button><button data-bank="wrong">บัญชีเงินเดือน</button><button data-bank="right">บัญชีที่ปิดไปแล้ว</button></div><button class="ex-cta" id="bank-transfer" disabled>กดค้างเพื่อไม่โอน</button><div class="ex-meter"><span id="bank-transfer-fill"></span></div></div>`;
+    const accounts = [
+      {id:'closed',name:'บัญชีที่ปิดไปแล้ว',rule:'บัญชีปลายทางต้องไม่เปิดใช้งานอีก'},
+      {id:'sleeping',name:'บัญชีที่หลับอยู่',rule:'บัญชีปลายทางต้องหยุดชั่วคราว แต่ยังไม่ปิด'},
+      {id:'future',name:'บัญชีที่ยังไม่เปิด',rule:'บัญชีปลายทางต้องมีสถานะก่อนเปิดใช้งาน'}
+    ];
+    const chosen = accounts[Math.floor(Math.random() * accounts.length)];
+    area.innerHTML = `<div class="atm"><div class="atm-screen"><small>TRANSFER / ฿0.00</small><strong>เลือกผู้รับ</strong><span id="bank-recipient">ยังไม่มีบัญชีปลายทาง</span></div><button class="bank-receipt-button" id="bank-transfer-policy">อ่านเงื่อนไขโอนศูนย์บาท ↗</button><div class="bank-receipt" id="bank-transfer-note" hidden>${chosen.rule}</div><div class="bank-accounts">${shuffled(accounts).map(account => `<button data-bank="${account.id}">${account.name}</button>`).join('')}</div><button class="ex-cta" id="bank-transfer" disabled>กดค้างเพื่อไม่โอน</button><div class="ex-meter"><span id="bank-transfer-fill"></span></div></div>`;
+    area.querySelector('#bank-transfer-policy').addEventListener('click', () => { area.querySelector('#bank-transfer-note').hidden = false; ctx.sound(410); });
     area.querySelectorAll('[data-bank]').forEach(b => b.addEventListener('click', () => {
-      if (b.dataset.bank !== 'right') { fail('บัญชีนี้ยังใช้งานได้จริง เราจึงไม่รองรับ'); return; }
       if (armed) return;
+      if (b.dataset.bank !== chosen.id) { fail('สถานะบัญชีไม่ตรงกับเงื่อนไขโอนวันนี้'); return; }
       armed = true;
-      area.querySelector('#bank-recipient').textContent = 'ปลายทาง: บัญชีที่ปิดไปแล้ว';
+      area.querySelector('#bank-recipient').textContent = `ปลายทาง: ${chosen.name}`;
       const button = area.querySelector('#bank-transfer'); button.disabled = false;
       hold(button, area.querySelector('#bank-transfer-fill'), 1900, ctx, done, 'ธนาคารต้องการนิ้วที่มั่นคงกว่านี้');
     }));
